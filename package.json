@@ -1,0 +1,16 @@
+{
+  "name": "user_authentication_system",
+  "version": "1.0.0",
+  "description": "user authentication system backend in javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "javascript",
+    "backend",
+    "authentication"
+  ],
+  "author": "shweta",
+  "license": "ISC"
+}
