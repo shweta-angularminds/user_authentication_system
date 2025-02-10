@@ -186,25 +186,20 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const getProfile = asyncHandler(async (req, res) => {
- 
-  try {
-   
-    const data = {
-      username: req.user.username,
-      fullname: req.user.fullname,
-      email: req.user.email,
-      avatar:req.user.avatar,
-      coverImage:req.user.coverImage
-    };
+const self = asyncHandler(async (req, res) => {
+  
+ const data = {
+  username:req.user.username,
+  fullname:req.user.fullname,
+  email:req.user.email,
+  avatar:req.user.avatar,
+  coverImage:req.user.coverImage,
+ }
 
-    return res
-      .status(200)
+  return res
+    .status(200)
 
-      .json(new ApiResponse(200,  data , ""));
-  } catch (error) {
-    throw new ApiError(401, error?.message || "Invalid user");
-  }
+    .send(data);
 });
 
-export { registerUser, loginUser, logOutUser, refreshAccessToken ,getProfile};
+export { registerUser, loginUser, logOutUser, refreshAccessToken, self };
