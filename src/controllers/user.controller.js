@@ -151,30 +151,51 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     req.cookies.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "unauthorized request");
+    throw new ApiError(401, "Unauthorized request");
   }
+
   try {
+    // Verify the incoming refresh token
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
 
+    // Find user associated with the refresh token
     const user = await User.findById(decodedToken?._id);
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
+
+    // If the refresh token in the cookie doesn't match the stored refresh token
     if (incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh token is expired or used");
     }
 
+    // Now check if the refresh token has expired
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    const refreshTokenExpiryTime = decodedToken.exp; // Expiry time from the decoded token
+
+    // If the refresh token has expired, generate a new one
+    let refreshToken;
+    if (refreshTokenExpiryTime <= currentTime) {
+      // Refresh token expired, generate new one
+      refreshToken = user.generateRefreshToken();
+      user.refreshToken = refreshToken;
+      await user.save({ validateBeforeSave: false });
+    } else {
+      // Use existing refresh token for generating a new access token
+      refreshToken = incomingRefreshToken;
+    }
+
+    // Generate a new access token
+    const accessToken = user.generateAccessToken();
+
+    // Set new refresh token and access token in the cookies
     const options = {
       httpOnly: true,
       secure: true,
     };
-
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-      user._id
-    );
 
     return res
       .status(200)
@@ -187,14 +208,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 });
 
 const self = asyncHandler(async (req, res) => {
-  
- const data = {
-  username:req.user.username,
-  fullname:req.user.fullname,
-  email:req.user.email,
-  avatar:req.user.avatar,
-  coverImage:req.user.coverImage,
- }
+  const data = {
+    username: req.user.username,
+    fullname: req.user.fullname,
+    email: req.user.email,
+    avatar: req.user.avatar,
+    coverImage: req.user.coverImage,
+  };
 
   return res
     .status(200)
